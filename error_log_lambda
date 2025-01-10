@@ -1,0 +1,49 @@
+import json
+import re
+from typing import Dict
+
+def process_log_file(input):
+    try:
+        result = {
+            "total_errors": 0,
+            "unique_error_messages": []
+        }
+
+        error_pattern = re.compile(r"ERROR: (.+)")
+
+        print(error_pattern)
+        # Find all ERROR lines
+
+        error_entries = error_pattern.findall(input)
+
+        # Print the extracted error entries
+        print(error_entries)
+        result['total_errors'] = len(error_entries)
+        result['unique_error_messages'] = error_entries
+        return result
+    except Exception as e:
+        raise ValueError(f"Error processing the log file: {e}")
+
+
+def lambda_handler(event, context):
+    try:
+        f = json.loads(event['body'])
+        log_content = str(f['log_content']) # event.get("log_content", "")
+        if not log_content:
+            return {
+                "statusCode": 400,
+                "body": json.dumps({"error": "Invalid log content format"})
+            }
+
+        result = process_log_file(log_content)
+
+        return {
+           "statusCode": 200,
+          "body": json.dumps(result),
+        }
+
+    except Exception as e:
+        return {
+            "statusCode": 500,
+            "body": json.dumps({"error": str(e)})
+        }
